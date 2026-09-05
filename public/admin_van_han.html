@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quản trị Luận Hạn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <div class="brand">
+      <span class="glyph">卦</span>
+      <div>
+        <h1>Quản trị Luận Hạn</h1>
+        <div class="tagline">Duyệt, sửa, xoá và thêm câu hỏi</div>
+      </div>
+    </div>
+    <div class="header-actions" id="header-auth-slot"></div>
+  </div>
+</header>
+
+<main class="container">
+  <div id="not-admin" style="display:none;" class="empty-state">
+    Bạn không có quyền truy cập trang này. <a href="/dang-nhap.html?redirect=%2Fadmin_van_han.html">Đăng nhập bằng tài khoản quản trị</a>.
+  </div>
+
+  <div id="admin-area" style="display:none;">
+    <div class="filter-bar">
+      <input type="search" id="admin-search" placeholder="Tìm theo nội dung, mã, tác giả..." />
+      <button class="btn btn-primary" id="open-create-btn">+ Thêm câu hỏi mới</button>
+    </div>
+
+    <div class="admin-tabs">
+      <div class="admin-tab active" data-status="pending">Chờ duyệt</div>
+      <div class="admin-tab" data-status="approved">Đã duyệt</div>
+      <div class="admin-tab" data-status="rejected">Đã từ chối</div>
+    </div>
+
+    <div id="admin-list"></div>
+    <div id="admin-pagination" class="pagination"></div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-box-header">
+      <h3 id="modal-title">Câu hỏi</h3>
+      <button class="btn btn-sm btn-ghost" id="modal-close">Đóng</button>
+    </div>
+    <div class="form-message" id="modal-message"></div>
+    <form id="question-edit-form">
+      <input type="hidden" id="edit-id" />
+      <fieldset>
+        <legend>Thông tin lá số</legend>
+        <div class="field">
+          <label for="edit-birth-raw">Mô tả ngày sinh</label>
+          <input type="text" id="edit-birth-raw" required />
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Câu hỏi</legend>
+        <div class="field">
+          <label for="edit-category">Chuyên mục</label>
+          <input type="text" id="edit-category" required />
+        </div>
+        <div class="field">
+          <label for="edit-question">Nội dung câu hỏi</label>
+          <textarea id="edit-question" required></textarea>
+        </div>
+        <div class="field">
+          <label>4 lựa chọn</label>
+          <div class="option-editor-row"><span class="option-letter">A.</span><input type="text" id="edit-opt-a" required /></div>
+          <div class="option-editor-row"><span class="option-letter">B.</span><input type="text" id="edit-opt-b" required /></div>
+          <div class="option-editor-row"><span class="option-letter">C.</span><input type="text" id="edit-opt-c" required /></div>
+          <div class="option-editor-row"><span class="option-letter">D.</span><input type="text" id="edit-opt-d" required /></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="edit-answer">Đáp án đúng</label>
+            <select id="edit-answer" required>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+          <div class="field" id="edit-status-field" style="display:none;">
+            <label for="edit-status">Trạng thái</label>
+            <select id="edit-status">
+              <option value="pending">Chờ duyệt</option>
+              <option value="approved">Đã duyệt</option>
+              <option value="rejected">Từ chối</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" id="edit-author-field">
+          <label for="edit-author-name">Tên tác giả hiển thị (chỉ áp dụng khi tạo mới thủ công)</label>
+          <input type="text" id="edit-author-name" placeholder="Quản trị viên" />
+        </div>
+      </fieldset>
+      <button type="submit" class="btn btn-primary" style="width:100%;">Lưu</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/common.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

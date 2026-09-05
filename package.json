@@ -1,0 +1,17 @@
+{
+  "name": "luanhan-van-han",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Trang luận hạn (câu hỏi vấn đáp Tứ Trụ/Tử Vi) - MongoDB + Vercel serverless",
+  "scripts": {
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.9.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
