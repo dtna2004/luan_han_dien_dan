@@ -377,7 +377,7 @@ select {
 .author-line {
   color: var(--color-ink-faint);
   font-size: 0.88rem;
-  margin: 6px 0 30px;
+  margin: 6px 0 14px;
 }
 
 .status-badge {
