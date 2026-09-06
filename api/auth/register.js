@@ -47,6 +47,7 @@ module.exports = async (req, res) => {
       email: cleanEmail,
       password_hash: passwordHash,
       role: isAdmin ? 'admin' : 'user',
+      banned: false,
       created_at: new Date(),
     };
 

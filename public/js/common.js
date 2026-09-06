@@ -55,6 +55,46 @@ function debounce(fn, wait) {
 
 const CATEGORY_LABELS = {}; // dự phòng nếu cần map nhãn tuỳ chỉnh sau này
 
+// Ghi nhận lượt truy cập (ẩn danh, không gắn với tài khoản) - gọi 1 lần khi mỗi trang tải xong
+function trackVisit() {
+  fetch('/api/stats/track', { method: 'POST', credentials: 'same-origin' }).catch(() => { });
+}
+
+// Tạo các đường dẫn chia sẻ mạng xã hội cho 1 URL + tiêu đề cho trước
+function buildShareLinks(url, title) {
+  const encodedUrl = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title || '');
+  return {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+    zalo: `https://sp.zalo.me/share?u=${encodedUrl}&t=${encodedTitle}`,
+    telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+  };
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    // Trình duyệt cũ / không hỗ trợ clipboard API
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.select();
+    try {
+      document.execCommand('copy');
+      return true;
+    } catch (e2) {
+      return false;
+    } finally {
+      document.body.removeChild(el);
+    }
+  }
+}
+
 async function initHeaderAuth() {
   const slot = document.getElementById('header-auth-slot');
   if (!slot) return null;
@@ -89,3 +129,5 @@ async function initHeaderAuth() {
     return null;
   }
 }
+
+trackVisit();

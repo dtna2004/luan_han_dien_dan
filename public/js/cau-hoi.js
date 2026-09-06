@@ -57,12 +57,44 @@ function renderQuestion(item) {
     </div>
 
     <div class="author-line">Tác giả: ${escapeHtml((item.author && item.author.name) || 'Vô danh khách')}${item.created_at ? ' · ' + formatDate(item.created_at) : ''}</div>
+
+    <div class="share-bar" id="share-bar"></div>
   `;
 
   document.getElementById('reveal-btn').addEventListener('click', () => {
     const row = questionArea.querySelector(`.option-row[data-letter="${item.answer}"]`);
     if (row) row.classList.add('is-answer');
     document.getElementById('reveal-btn').outerHTML = `<div><strong>Đáp án: ${item.answer}</strong></div>`;
+  });
+
+  renderShareBar(item);
+}
+
+function renderShareBar(item) {
+  const bar = document.getElementById('share-bar');
+  if (!bar) return;
+  const num = item.question_number ? String(item.question_number).padStart(3, '0') : '';
+  const url = window.location.href;
+  const title = `Luận Hạn #${num}: ${item.question}`;
+  const links = buildShareLinks(url, title);
+
+  bar.innerHTML = `
+    <span class="share-label">Chia sẻ:</span>
+    <a class="share-btn share-fb" href="${links.facebook}" target="_blank" rel="noopener noreferrer" title="Chia sẻ lên Facebook">Facebook</a>
+    <a class="share-btn share-zalo" href="${links.zalo}" target="_blank" rel="noopener noreferrer" title="Chia sẻ qua Zalo">Zalo</a>
+    <a class="share-btn share-tw" href="${links.twitter}" target="_blank" rel="noopener noreferrer" title="Chia sẻ lên X/Twitter">X</a>
+    <a class="share-btn share-tg" href="${links.telegram}" target="_blank" rel="noopener noreferrer" title="Chia sẻ qua Telegram">Telegram</a>
+    <button class="share-btn share-copy" id="copy-link-btn" type="button" title="Sao chép liên kết">Sao chép liên kết</button>
+  `;
+
+  document.getElementById('copy-link-btn').addEventListener('click', async (e) => {
+    const ok = await copyToClipboard(url);
+    const btn = e.currentTarget;
+    const original = btn.textContent;
+    btn.textContent = ok ? 'Đã sao chép!' : 'Không sao chép được';
+    setTimeout(() => {
+      btn.textContent = original;
+    }, 1800);
   });
 }
 

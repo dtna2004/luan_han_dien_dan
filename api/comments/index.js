@@ -1,6 +1,6 @@
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../../lib/mongodb');
-const { getUserFromRequest } = require('../../lib/auth');
+const { getUserFromRequest, requireActiveUser } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
   const db = await getDb();
@@ -26,11 +26,8 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
-    const user = getUserFromRequest(req);
-    if (!user) {
-      res.status(401).json({ error: 'Bạn cần đăng nhập để bình luận.' });
-      return;
-    }
+    const user = await requireActiveUser(req, res, db);
+    if (!user) return;
     try {
       const { question_id, content, parent_id } = req.body || {};
       if (!question_id || !content || !String(content).trim()) {

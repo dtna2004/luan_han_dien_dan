@@ -719,3 +719,190 @@ footer.site-footer {
     padding: 20px 16px;
   }
 }
+
+/* ============ Thanh chia sẻ mạng xã hội ============ */
+.share-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-gold-line);
+}
+
+.share-label {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+  margin-right: 2px;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-gold-line);
+  background: var(--color-white);
+  color: var(--color-ink);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.share-btn:hover {
+  background: var(--color-paper-alt);
+  text-decoration: none;
+}
+
+.share-fb:hover {
+  border-color: #1877f2;
+  color: #1877f2;
+}
+
+.share-zalo:hover {
+  border-color: #0068ff;
+  color: #0068ff;
+}
+
+.share-tw:hover {
+  border-color: var(--color-ink);
+}
+
+.share-tg:hover {
+  border-color: #29a9eb;
+  color: #29a9eb;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 20px 0 28px;
+}
+
+.stat-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-gold-line);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+
+.stat-card .stat-value {
+  font-family: 'Noto Serif', serif;
+  font-size: 1.6rem;
+  color: var(--color-seal);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-card .stat-label {
+  font-size: 0.82rem;
+  color: var(--color-ink-soft);
+  margin-top: 2px;
+}
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.bar-chart-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 46px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+
+.bar-chart-row .bar-label {
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  background: var(--color-paper-alt);
+  border-radius: var(--radius-sm);
+  height: 14px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  background: var(--color-jade);
+  height: 100%;
+}
+
+.bar-chart-row .bar-count {
+  text-align: right;
+  color: var(--color-ink-soft);
+}
+
+.daily-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  margin-bottom: 30px;
+}
+
+.daily-table th,
+.daily-table td {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-paper-alt);
+}
+
+.daily-table th {
+  color: var(--color-ink-soft);
+  font-weight: 600;
+}
+
+.user-item {
+  background: var(--color-white);
+  border: 1px solid var(--color-gold-line);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.user-item-info .user-name {
+  font-weight: 700;
+}
+
+.user-item-info .field-hint {
+  margin-top: 2px;
+}
+
+.role-badge {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: rgba(176, 139, 79, 0.2);
+  color: #7a5a20;
+  margin-left: 6px;
+}
+
+.role-badge.admin {
+  background: rgba(70, 97, 79, 0.18);
+  color: var(--color-jade-dark);
+}
+
+.banned-badge {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: rgba(166, 56, 43, 0.15);
+  color: var(--color-seal-dark);
+  margin-left: 6px;
+}
+
+.category-custom-row {
+  margin-top: 8px;
+}

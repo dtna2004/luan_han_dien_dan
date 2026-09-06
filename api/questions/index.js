@@ -1,5 +1,5 @@
 const { getDb } = require('../../lib/mongodb');
-const { getUserFromRequest } = require('../../lib/auth');
+const { requireActiveUser } = require('../../lib/auth');
 
 const VALID_LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -96,11 +96,8 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
-    const user = getUserFromRequest(req);
-    if (!user) {
-      res.status(401).json({ error: 'Bạn cần đăng nhập để đăng câu hỏi.' });
-      return;
-    }
+    const user = await requireActiveUser(req, res, db);
+    if (!user) return;
 
     const errors = validateSubmission(req.body);
     if (errors.length) {

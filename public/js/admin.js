@@ -1,3 +1,5 @@
+const CUSTOM_CATEGORY_VALUE = '__custom__';
+
 const adminState = {
   status: 'pending',
   page: 1,
@@ -6,6 +8,7 @@ const adminState = {
 };
 
 let editingId = null; // null => đang tạo mới
+let categoriesCache = null;
 
 const listEl = document.getElementById('admin-list');
 const paginationEl = document.getElementById('admin-pagination');
@@ -15,10 +18,58 @@ const modalMessage = document.getElementById('modal-message');
 const editForm = document.getElementById('question-edit-form');
 const statusField = document.getElementById('edit-status-field');
 const authorField = document.getElementById('edit-author-field');
+const categorySelectEl = document.getElementById('edit-category-select');
+const categoryCustomRow = document.getElementById('edit-category-custom-row');
+const categoryCustomInput = document.getElementById('edit-category-custom');
 
 const STATUS_LABEL = { pending: 'Chờ duyệt', approved: 'Đã duyệt', rejected: 'Đã từ chối' };
 
-function openModal(mode, item) {
+async function getCategories(forceRefresh) {
+  if (categoriesCache && !forceRefresh) return categoriesCache;
+  try {
+    const data = await api('/api/categories');
+    categoriesCache = data.categories || [];
+  } catch (err) {
+    categoriesCache = [];
+  }
+  return categoriesCache;
+}
+
+async function populateCategorySelect(currentValue) {
+  const cats = await getCategories();
+  const options = cats.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`);
+  options.push(`<option value="${CUSTOM_CATEGORY_VALUE}">+ Thêm chuyên mục mới...</option>`);
+  categorySelectEl.innerHTML = options.join('');
+
+  categoryCustomRow.style.display = 'none';
+  categoryCustomInput.value = '';
+
+  if (currentValue && cats.includes(currentValue)) {
+    categorySelectEl.value = currentValue;
+  } else if (currentValue) {
+    categorySelectEl.value = CUSTOM_CATEGORY_VALUE;
+    categoryCustomRow.style.display = '';
+    categoryCustomInput.value = currentValue;
+  } else {
+    categorySelectEl.value = cats.length ? cats[0] : CUSTOM_CATEGORY_VALUE;
+    if (!cats.length) categoryCustomRow.style.display = '';
+  }
+}
+
+categorySelectEl.addEventListener('change', () => {
+  const isCustom = categorySelectEl.value === CUSTOM_CATEGORY_VALUE;
+  categoryCustomRow.style.display = isCustom ? '' : 'none';
+  if (isCustom) categoryCustomInput.focus();
+});
+
+function getEditCategoryValue() {
+  if (categorySelectEl.value === CUSTOM_CATEGORY_VALUE) {
+    return categoryCustomInput.value.trim();
+  }
+  return categorySelectEl.value;
+}
+
+async function openModal(mode, item) {
   modalMessage.className = 'form-message';
   modalMessage.textContent = '';
   editForm.reset();
@@ -28,9 +79,10 @@ function openModal(mode, item) {
   statusField.style.display = mode === 'edit' ? '' : 'none';
   authorField.style.display = mode === 'edit' ? 'none' : '';
 
+  await populateCategorySelect(mode === 'edit' && item ? item.category : '');
+
   if (mode === 'edit' && item) {
     document.getElementById('edit-birth-raw').value = (item.birth_info && item.birth_info.raw) || '';
-    document.getElementById('edit-category').value = item.category || '';
     document.getElementById('edit-question').value = item.question || '';
     const opts = item.options || [];
     document.getElementById('edit-opt-a').value = (opts.find((o) => o.letter === 'A') || {}).text || '';
@@ -63,9 +115,17 @@ editForm.addEventListener('submit', async (e) => {
   const submitBtn = editForm.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
 
+  const category = getEditCategoryValue();
+  if (!category) {
+    modalMessage.textContent = 'Vui lòng chọn hoặc nhập tên chuyên mục.';
+    modalMessage.className = 'form-message show error';
+    submitBtn.disabled = false;
+    return;
+  }
+
   const payload = {
     birth_info: { raw: document.getElementById('edit-birth-raw').value.trim() },
-    category: document.getElementById('edit-category').value.trim(),
+    category,
     question: document.getElementById('edit-question').value.trim(),
     options: [
       { letter: 'A', text: document.getElementById('edit-opt-a').value.trim() },
@@ -85,6 +145,7 @@ editForm.addEventListener('submit', async (e) => {
       payload.author_name = document.getElementById('edit-author-name').value.trim() || 'Quản trị viên';
       await api('/api/admin/questions', { method: 'POST', body: payload });
     }
+    categoriesCache = null; // chuyên mục có thể vừa được thêm mới, làm mới cache
     closeModal();
     await loadList();
   } catch (err) {
@@ -177,9 +238,9 @@ function renderItem(item) {
   return div;
 }
 
-function renderPagination(page, totalPages) {
+function renderPagination(container, page, totalPages, onGo) {
   if (totalPages <= 1) {
-    paginationEl.innerHTML = '';
+    container.innerHTML = '';
     return;
   }
   const buttons = [];
@@ -188,12 +249,9 @@ function renderPagination(page, totalPages) {
     buttons.push(`<button class="${p === page ? 'active' : ''}" data-page="${p}">${p}</button>`);
   }
   buttons.push(`<button ${page >= totalPages ? 'disabled' : ''} data-page="${page + 1}">›</button>`);
-  paginationEl.innerHTML = buttons.join('');
-  paginationEl.querySelectorAll('button[data-page]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      adminState.page = parseInt(btn.dataset.page, 10);
-      loadList();
-    });
+  container.innerHTML = buttons.join('');
+  container.querySelectorAll('button[data-page]').forEach((btn) => {
+    btn.addEventListener('click', () => onGo(parseInt(btn.dataset.page, 10)));
   });
 }
 
@@ -214,15 +272,18 @@ async function loadList() {
     } else {
       data.items.forEach((item) => listEl.appendChild(renderItem(item)));
     }
-    renderPagination(data.page, data.totalPages);
+    renderPagination(paginationEl, data.page, data.totalPages, (page) => {
+      adminState.page = page;
+      loadList();
+    });
   } catch (err) {
     listEl.innerHTML = `<div class="empty-state">Lỗi: ${escapeHtml(err.message)}</div>`;
   }
 }
 
-document.querySelectorAll('.admin-tab').forEach((tab) => {
+document.querySelectorAll('#section-questions .admin-tabs .admin-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.admin-tab').forEach((t) => t.classList.remove('active'));
+    document.querySelectorAll('#section-questions .admin-tabs .admin-tab').forEach((t) => t.classList.remove('active'));
     tab.classList.add('active');
     adminState.status = tab.dataset.status;
     adminState.page = 1;
@@ -238,6 +299,33 @@ document.getElementById('admin-search').addEventListener(
     loadList();
   }, 350)
 );
+
+// ============ Chuyển đổi giữa các mục lớn: Câu hỏi / Bình luận / Người dùng / Thống kê ============
+const sectionInitialized = { questions: true, comments: false, users: false, stats: false };
+const SECTIONS = ['questions', 'comments', 'users', 'stats'];
+
+document.querySelectorAll('#main-tabs .admin-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#main-tabs .admin-tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    const section = tab.dataset.section;
+    SECTIONS.forEach((s) => {
+      document.getElementById('section-' + s).style.display = s === section ? '' : 'none';
+    });
+    if (section === 'comments' && !sectionInitialized.comments) {
+      sectionInitialized.comments = true;
+      initCommentsSection();
+    }
+    if (section === 'users' && !sectionInitialized.users) {
+      sectionInitialized.users = true;
+      initUsersSection();
+    }
+    if (section === 'stats' && !sectionInitialized.stats) {
+      sectionInitialized.stats = true;
+      initStatsSection();
+    }
+  });
+});
 
 async function init() {
   const user = await initHeaderAuth();
