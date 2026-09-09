@@ -14,7 +14,7 @@ async function main() {
     console.error('Thiếu MONGODB_URI trong biến môi trường (.env).');
     process.exit(1);
   }
-  const dbName = process.env.MONGODB_DB || 'tuvi_cache';
+  const dbName = process.env.MONGODB_DB || 'luan_han_forum';
 
   const filePath = process.argv[2]
     ? path.resolve(process.argv[2])
