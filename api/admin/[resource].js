@@ -1,6 +1,9 @@
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../../lib/mongodb');
 const { requireAdmin } = require('../../lib/auth');
+const { generateAiAnalysis } = require('../../lib/aiAgent/pipeline');
+const modelRegistry = require('../../lib/aiAgent/modelRegistry');
+const keyRotator = require('../../lib/aiAgent/keyRotator');
 
 const VALID_LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -406,6 +409,101 @@ async function handleUsers(req, res, db, admin) {
     res.status(405).json({ error: 'Method không được hỗ trợ' });
 }
 
+// resource=agent — mọi thao tác quản trị của tính năng AI Agent luận giải Bát Tự,
+// gộp chung vào đây (dựa theo query "action") để không phát sinh thêm function nào.
+async function handleAgent(req, res, db, admin) {
+    const { action, id } = req.query || {};
+
+    if (action === 'settings') {
+        if (req.method === 'GET') {
+            const settings = await modelRegistry.getSettings(db);
+            res.status(200).json({ settings, availableModels: modelRegistry.AVAILABLE_MODELS });
+            return;
+        }
+        if (req.method === 'PUT') {
+            const { modelExtract, modelExplain, modelEmbedding } = req.body || {};
+            const settings = await modelRegistry.updateSettings(db, {
+                modelExtract, modelExplain, modelEmbedding, updatedBy: admin.username,
+            });
+            res.status(200).json({ settings });
+            return;
+        }
+        res.status(405).json({ error: 'Method không được hỗ trợ' });
+        return;
+    }
+
+    if (action === 'key-usage') {
+        if (req.method !== 'GET') {
+            res.status(405).json({ error: 'Method không được hỗ trợ' });
+            return;
+        }
+        const stats = await keyRotator.getUsageStats(db);
+        res.status(200).json(stats);
+        return;
+    }
+
+    if (action === 'regenerate') {
+        if (req.method !== 'POST') {
+            res.status(405).json({ error: 'Method không được hỗ trợ' });
+            return;
+        }
+        if (!id) {
+            res.status(400).json({ error: 'Thiếu id câu hỏi cần tính lại.' });
+            return;
+        }
+        try {
+            const caseDoc = await db.collection('van_han').findOne({ id: String(id) });
+            if (!caseDoc) {
+                res.status(404).json({ error: 'Không tìm thấy câu hỏi.' });
+                return;
+            }
+            const { modelExtract, modelExplain, modelEmbedding } = req.body || {};
+            const result = await generateAiAnalysis(db, caseDoc, {
+                forceRegenerate: true,
+                modelOverrides: { extract: modelExtract, explain: modelExplain, embedding: modelEmbedding },
+            });
+            res.status(200).json(result);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: err.message || 'Lỗi máy chủ.' });
+        }
+        return;
+    }
+
+    if (action === 'case') {
+        if (req.method !== 'PUT') {
+            res.status(405).json({ error: 'Method không được hỗ trợ' });
+            return;
+        }
+        if (!id) {
+            res.status(400).json({ error: 'Thiếu id câu hỏi cần sửa.' });
+            return;
+        }
+        try {
+            const { ai_bazi, ai_explanation } = req.body || {};
+            const update = { updated_at: new Date(), 'ai_meta.editedByAdmin': true };
+            if (ai_bazi !== undefined) update.ai_bazi = ai_bazi;
+            if (ai_explanation !== undefined) update.ai_explanation = ai_explanation;
+
+            const col = db.collection('van_han');
+            const existing = await col.findOne({ id: String(id) });
+            if (!existing) {
+                res.status(404).json({ error: 'Không tìm thấy câu hỏi.' });
+                return;
+            }
+            await col.updateOne({ id: String(id) }, { $set: update });
+            const updated = await col.findOne({ id: String(id) });
+            res.status(200).json({ item: updated });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: err.message || 'Lỗi máy chủ.' });
+        }
+        return;
+    }
+
+    res.status(404).json({ error: 'Không tìm thấy hành động (action) cho resource agent.' });
+}
+
 module.exports = async (req, res) => {
     const admin = requireAdmin(req, res);
     if (!admin) return;
@@ -422,6 +520,8 @@ module.exports = async (req, res) => {
             return handleStats(req, res, db, admin);
         case 'users':
             return handleUsers(req, res, db, admin);
+        case 'agent':
+            return handleAgent(req, res, db, admin);
         default:
             res.status(404).json({ error: 'Không tìm thấy endpoint.' });
     }

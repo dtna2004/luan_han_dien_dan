@@ -55,6 +55,7 @@ function renderQuestion(item) {
     <div class="reveal-box">
       <button class="btn btn-primary" id="reveal-btn">Xem đáp án</button>
     </div>
+    <div id="ai-agent-panel"></div>
 
     <div class="author-line">Tác giả: ${escapeHtml((item.author && item.author.name) || 'Vô danh khách')}${item.created_at ? ' · ' + formatDate(item.created_at) : ''}</div>
 
@@ -65,6 +66,11 @@ function renderQuestion(item) {
     const row = questionArea.querySelector(`.option-row[data-letter="${item.answer}"]`);
     if (row) row.classList.add('is-answer');
     document.getElementById('reveal-btn').outerHTML = `<div><strong>Đáp án: ${item.answer}</strong></div>`;
+
+    // Tải lá số Bát Tự + luận giải AI (tính lần đầu, các lần xem sau dùng bản đã lưu)
+    if (window.AiAgent) {
+      window.AiAgent.showAnswer(item.id, document.getElementById('ai-agent-panel'));
+    }
   });
 
   renderShareBar(item);

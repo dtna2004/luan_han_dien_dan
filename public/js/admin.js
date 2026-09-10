@@ -229,6 +229,12 @@ function renderItem(item) {
   editBtn.addEventListener('click', () => openModal('edit', item));
   actions.appendChild(editBtn);
 
+  const agentBtn = document.createElement('button');
+  agentBtn.className = 'btn btn-sm btn-ghost';
+  agentBtn.textContent = 'Luận giải AI';
+  agentBtn.addEventListener('click', () => window.AdminAgent && window.AdminAgent.openCaseModal(item.id));
+  actions.appendChild(agentBtn);
+
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'btn btn-sm btn-danger';
   deleteBtn.textContent = 'Xoá';
@@ -301,8 +307,8 @@ document.getElementById('admin-search').addEventListener(
 );
 
 // ============ Chuyển đổi giữa các mục lớn: Câu hỏi / Bình luận / Người dùng / Thống kê ============
-const sectionInitialized = { questions: true, comments: false, users: false, stats: false };
-const SECTIONS = ['questions', 'comments', 'users', 'stats'];
+const sectionInitialized = { questions: true, comments: false, users: false, stats: false, agent: false };
+const SECTIONS = ['questions', 'comments', 'users', 'stats', 'agent'];
 
 document.querySelectorAll('#main-tabs .admin-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
@@ -323,6 +329,10 @@ document.querySelectorAll('#main-tabs .admin-tab').forEach((tab) => {
     if (section === 'stats' && !sectionInitialized.stats) {
       sectionInitialized.stats = true;
       initStatsSection();
+    }
+    if (section === 'agent' && !sectionInitialized.agent) {
+      sectionInitialized.agent = true;
+      window.AdminAgent && window.AdminAgent.initSettingsSection();
     }
   });
 });
